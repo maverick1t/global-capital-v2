@@ -70,11 +70,12 @@ const App: React.FC = () => {
     }
   };
 
-const handleAggregateScan = async () => {
+// 替换后的 handleAggregateScan 函数
+  const handleAggregateScan = async () => {
     if (!apiKey) return;
     
     const categories = Object.values(Category);
-    // 初始化所有分类为加载状态
+    // 1. 先把所有分类的状态都设为“加载中”
     const initialLoadingState = categories.reduce((acc, cat) => ({
       ...acc, 
       [cat]: true
@@ -82,8 +83,8 @@ const handleAggregateScan = async () => {
     
     setLoadingStatus(initialLoadingState);
 
-    // 【修改点】原本是 Promise.all 并发，现在改成 for 循环排队执行
-    // 这样每次只发一个请求，就不会触发 Google 的 429 报错了
+    // 2. 【关键修改】使用 for 循环，强制排队执行
+    // 这样每次只发 1 个请求，绝对不会触发 429 报错
     for (const cat of categories) {
         try {
             // 请求当前分类的新闻
@@ -100,12 +101,12 @@ const handleAggregateScan = async () => {
         } catch (err) {
             console.error(`Error fetching category ${cat}:`, err);
         } finally {
-            // 加载完一个，取消一个的 loading 状态
+            // 这个分类加载完了，取消它的 loading 状态
             setLoadingStatus(prev => ({ ...prev, [cat]: false }));
         }
         
-        // 可选：稍微停顿 0.5 秒，更稳妥
-        await new Promise(r => setTimeout(r, 500));
+        // 3. 【防封号缓冲】每请求完一个，休息 1 秒钟
+        await new Promise(r => setTimeout(r, 1000));
     }
   };
 
