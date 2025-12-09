@@ -1,0 +1,5 @@
+{
+  "name": "Global Horizon",
+  "description": "An intelligent news aggregator designed to break information echo chambers by curating authoritative global perspectives and contrasting viewpoints using Gemini with Google Search.",
+  "requestFramePermissions": []
+}
