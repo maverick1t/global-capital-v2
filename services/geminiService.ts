@@ -48,8 +48,8 @@ export const fetchGlobalNews = async (
   // Initialize with the provided API Key
   const ai = new GoogleGenAI({ apiKey });
   
-  // Use gemini-1.5-flash as requested
-  const model = "gemini-1.5-flash";
+  // Use gemini-2.0-flash-exp as requested
+  const model = "gemini-2.0-flash-exp";
   
   // Customizing prompts based on elite categories
   let specificFocus = "";
