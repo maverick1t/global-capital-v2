@@ -39,7 +39,7 @@ export const fetchGlobalNews = async (
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const model = "gemini-2.5-flash";
+  const model = "gemini-1.5-flash";
   
   let specificFocus = "";
   switch (category) {
