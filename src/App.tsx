@@ -70,11 +70,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAggregateScan = async () => {
+const handleAggregateScan = async () => {
     if (!apiKey) return;
     
     const categories = Object.values(Category);
-    // Explicitly cast the initial object to Record<Category, boolean> to satisfy TypeScript
+    // 初始化所有分类为加载状态
     const initialLoadingState = categories.reduce((acc, cat) => ({
       ...acc, 
       [cat]: true
@@ -82,23 +82,31 @@ const App: React.FC = () => {
     
     setLoadingStatus(initialLoadingState);
 
-    const promises = categories.map(cat => fetchGlobalNews(apiKey, cat, currentLanguage, breakBubbleMode)
-        .then(async (data) => {
+    // 【修改点】原本是 Promise.all 并发，现在改成 for 循环排队执行
+    // 这样每次只发一个请求，就不会触发 Google 的 429 报错了
+    for (const cat of categories) {
+        try {
+            // 请求当前分类的新闻
+            const data = await fetchGlobalNews(apiKey, cat, currentLanguage, breakBubbleMode);
+            
             if (data.items.length > 0) {
                 setNewsData(prev => ({ ...prev, [cat]: data.items }));
                 try {
+                    // 请求 AI 总结
                     const analysis = await generateBriefingAnalysis(apiKey, data.items, currentLanguage);
                     setBriefings(prev => ({ ...prev, [cat]: analysis }));
                 } catch (e) { console.error(e); }
             }
-        })
-        .catch(err => console.error(err))
-        .finally(() => {
+        } catch (err) {
+            console.error(`Error fetching category ${cat}:`, err);
+        } finally {
+            // 加载完一个，取消一个的 loading 状态
             setLoadingStatus(prev => ({ ...prev, [cat]: false }));
-        })
-    );
-
-    await Promise.all(promises);
+        }
+        
+        // 可选：稍微停顿 0.5 秒，更稳妥
+        await new Promise(r => setTimeout(r, 500));
+    }
   };
 
   const handleSingleUpdate = () => {
